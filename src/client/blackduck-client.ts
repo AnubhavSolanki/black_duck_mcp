@@ -17,6 +17,8 @@ import type {
   RemediationUpdate,
   PaginatedResponse,
   ErrorResponse,
+  DependencyPathsResponse,
+  UpgradeGuidanceResponse,
 } from './types.js';
 
 export class BlackDuckClient {
@@ -270,6 +272,53 @@ export class BlackDuckClient {
       endpoint,
       update,
       'application/vnd.blackducksoftware.vulnerability-4+json'
+    );
+  }
+
+  /**
+   * Get dependency paths for a component origin
+   */
+  async getDependencyPaths(
+    projectId: string,
+    versionId: string,
+    originId: string
+  ): Promise<DependencyPathsResponse> {
+    const endpoint = `/api/project/${projectId}/version/${versionId}/origin/${originId}/dependency-paths`;
+    return this.get<DependencyPathsResponse>(
+      endpoint,
+      undefined,
+      'application/vnd.blackducksoftware.bill-of-materials-7+json'
+    );
+  }
+
+  /**
+   * Get upgrade guidance for a direct dependency
+   */
+  async getUpgradeGuidance(
+    componentId: string,
+    componentVersionId: string
+  ): Promise<UpgradeGuidanceResponse> {
+    const endpoint = `/api/components/${componentId}/versions/${componentVersionId}/upgrade-guidance`;
+    return this.get<UpgradeGuidanceResponse>(
+      endpoint,
+      undefined,
+      'application/vnd.blackducksoftware.component-detail-5+json'
+    );
+  }
+
+  /**
+   * Get upgrade guidance for a transitive dependency
+   */
+  async getTransitiveUpgradeGuidance(
+    componentId: string,
+    componentVersionId: string,
+    originId: string
+  ): Promise<UpgradeGuidanceResponse> {
+    const endpoint = `/api/components/${componentId}/versions/${componentVersionId}/origins/${originId}/transitive-upgrade-guidance`;
+    return this.get<UpgradeGuidanceResponse>(
+      endpoint,
+      undefined,
+      'application/vnd.blackducksoftware.component-detail-5+json'
     );
   }
 

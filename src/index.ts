@@ -29,6 +29,9 @@ import {
 import {
   updateVulnerabilityRemediation,
 } from './tools/remediation.js';
+import {
+  getVulnerabilityFixGuidance,
+} from './tools/fix-guidance.js';
 
 // Tool parameter schemas
 const ListProjectsSchema = z.object({
@@ -87,6 +90,15 @@ const UpdateVulnerabilityRemediationSchema = z.object({
     'PATCHED',
   ]).describe('New remediation status for the vulnerability'),
   comment: z.string().optional().describe('Optional comment explaining the remediation decision'),
+});
+
+const GetVulnerabilityFixGuidanceSchema = z.object({
+  projectId: z.string().describe('UUID of the project'),
+  projectVersionId: z.string().describe('UUID of the project version'),
+  componentId: z.string().describe('UUID of the component'),
+  componentVersionId: z.string().describe('UUID of the component version'),
+  vulnerabilityId: z.string().describe('Vulnerability identifier (e.g., CVE-2023-1234)'),
+  originId: z.string().describe('UUID of the origin'),
 });
 
 /**
@@ -316,6 +328,48 @@ async function main() {
             ],
           },
         },
+        {
+          name: 'get_vulnerability_fix_guidance',
+          description:
+            'Get comprehensive fix guidance for a vulnerability including short-term and long-term upgrade recommendations. Automatically detects if the dependency is direct or transitive and provides appropriate remediation steps with risk analysis.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              projectId: {
+                type: 'string',
+                description: 'UUID of the project',
+              },
+              projectVersionId: {
+                type: 'string',
+                description: 'UUID of the project version',
+              },
+              componentId: {
+                type: 'string',
+                description: 'UUID of the component',
+              },
+              componentVersionId: {
+                type: 'string',
+                description: 'UUID of the component version',
+              },
+              vulnerabilityId: {
+                type: 'string',
+                description: 'Vulnerability identifier (e.g., CVE-2023-1234)',
+              },
+              originId: {
+                type: 'string',
+                description: 'UUID of the origin',
+              },
+            },
+            required: [
+              'projectId',
+              'projectVersionId',
+              'componentId',
+              'componentVersionId',
+              'vulnerabilityId',
+              'originId',
+            ],
+          },
+        },
       ],
     };
   });
@@ -379,6 +433,14 @@ async function main() {
         case 'update_vulnerability_remediation': {
           const params = UpdateVulnerabilityRemediationSchema.parse(args);
           const result = await updateVulnerabilityRemediation(params);
+          return {
+            content: [{ type: 'text', text: result }],
+          };
+        }
+
+        case 'get_vulnerability_fix_guidance': {
+          const params = GetVulnerabilityFixGuidanceSchema.parse(args);
+          const result = await getVulnerabilityFixGuidance(params);
           return {
             content: [{ type: 'text', text: result }],
           };

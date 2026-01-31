@@ -252,6 +252,59 @@ export interface VulnerabilityRemediation {
   _meta: Meta;
 }
 
+// Dependency Paths types
+export interface DependencyPathsResponse {
+  totalCount: number;
+  items: DependencyPathItem[];
+  _meta: Meta;
+}
+
+export interface DependencyPathItem {
+  count: number;
+  type: 'DIRECT' | 'TRANSITIVE';
+  path: DependencyPathNode[];
+}
+
+export interface DependencyPathNode {
+  name: string;
+  version: string;
+  originId: string;
+  nameSpace: string;
+  _meta: Meta;
+}
+
+// Upgrade Guidance types
+export interface UpgradeGuidanceResponse {
+  component: string;
+  componentName: string;
+  version: string;
+  versionName: string;
+  origin: string;
+  originName: string;
+  originExternalNamespace: string;
+  originExternalId: string;
+  shortTerm?: UpgradeRecommendation;
+  longTerm?: UpgradeRecommendation;
+  _meta: Meta;
+}
+
+export interface UpgradeRecommendation {
+  version: string;
+  versionName: string;
+  vulnerabilityRisk: VulnerabilityRiskCounts;
+  origin: string;
+  originName: string;
+  originExternalNamespace: string;
+  originExternalId: string;
+}
+
+export interface VulnerabilityRiskCounts {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+}
+
 // Error response
 export interface ErrorResponse {
   errorCode?: string;

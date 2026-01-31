@@ -4,7 +4,7 @@
 
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import { config } from '../config.js';
-import { createAuthHeaders } from '../utils/auth.js';
+import { authenticateAndGetBearerToken } from '../utils/auth.js';
 import {
   createErrorFromStatus,
   NetworkError,
@@ -22,6 +22,7 @@ import type {
 export class BlackDuckClient {
   private client: AxiosInstance;
   private baseURL: string;
+  private bearerToken: string | null = null;
 
   constructor() {
     this.baseURL = config.url;
@@ -30,25 +31,65 @@ export class BlackDuckClient {
       baseURL: this.baseURL,
       timeout: config.timeout,
       headers: {
-        ...createAuthHeaders(config.apiToken),
         'Content-Type': 'application/json',
       },
       // Important: Black Duck returns various content types
       validateStatus: (status) => status < 600, // Don't throw on any status < 600
     });
 
-    // Request interceptor for logging
-    if (config.debug) {
-      this.client.interceptors.request.use((request) => {
+    // Request interceptor for authentication and logging
+    this.client.interceptors.request.use(async (request) => {
+      // Ensure we have a valid bearer token
+      if (!this.bearerToken) {
+        this.bearerToken = await authenticateAndGetBearerToken(
+          this.baseURL,
+          config.apiToken,
+          config.timeout
+        );
+      }
+
+      // Add bearer token to headers
+      request.headers.Authorization = `Bearer ${this.bearerToken}`;
+
+      if (config.debug) {
         console.error(`[BlackDuck] ${request.method?.toUpperCase()} ${request.url}`);
-        return request;
-      });
-    }
+      }
+
+      return request;
+    });
 
     // Response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
+      async (error: AxiosError) => {
+        // Handle 401 by refreshing token and retrying
+        if (error.response?.status === 401 && !error.config?.headers['X-Retry']) {
+          try {
+            // Clear and re-authenticate
+            this.bearerToken = null;
+            this.bearerToken = await authenticateAndGetBearerToken(
+              this.baseURL,
+              config.apiToken,
+              config.timeout
+            );
+
+            // Retry the request once
+            const retryConfig = {
+              ...error.config,
+              headers: {
+                ...error.config?.headers,
+                'Authorization': `Bearer ${this.bearerToken}`,
+                'X-Retry': 'true',
+              },
+            };
+
+            return this.client.request(retryConfig);
+          } catch (authError) {
+            // Authentication failed, throw original error
+            throw error;
+          }
+        }
+
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
           throw new NetworkError(
             `Cannot connect to Black Duck server at ${this.baseURL}. Please check the URL and network connection.`

@@ -2,7 +2,8 @@
  * Authentication utilities for Black Duck API
  */
 
-import { ValidationError } from './errors.js';
+import axios from "axios";
+import { ValidationError } from "./errors.js";
 
 /**
  * Validate API token format
@@ -10,60 +11,94 @@ import { ValidationError } from './errors.js';
  */
 export function validateApiToken(token: string): void {
   if (!token || token.trim().length === 0) {
-    throw new ValidationError('API token cannot be empty');
+    throw new ValidationError("API token cannot be empty");
   }
 
   // Basic validation - check if token looks reasonable
   if (token.length < 10) {
-    throw new ValidationError('API token appears to be invalid (too short)');
+    throw new ValidationError("API token appears to be invalid (too short)");
   }
 
   // Check for common placeholder values
-  const placeholders = ['your-api-token', 'your-token', 'token-here', 'xxx', 'yyy'];
-  if (placeholders.some(placeholder => token.toLowerCase().includes(placeholder))) {
+  const placeholders = [
+    "your-api-token",
+    "your-token",
+    "token-here",
+    "xxx",
+    "yyy",
+  ];
+  if (
+    placeholders.some((placeholder) =>
+      token.toLowerCase().includes(placeholder),
+    )
+  ) {
     throw new ValidationError(
-      'Please replace the placeholder API token with your actual Black Duck API token'
+      "Please replace the placeholder API token with your actual Black Duck API token",
     );
   }
 }
 
 /**
- * Create authentication headers for Black Duck API
+ * Bearer token cache
  */
-export function createAuthHeaders(apiToken: string): Record<string, string> {
-  validateApiToken(apiToken);
-
-  return {
-    'Authorization': `Bearer ${apiToken}`,
-    'Accept': 'application/vnd.blackducksoftware.user-4+json',
-  };
-}
+let cachedBearerToken: string | null = null;
+let tokenExpiry: number = 0;
 
 /**
- * Get content type header for specific Black Duck API endpoint
+ * Authenticate with Black Duck and get a Bearer token
+ * Black Duck uses a two-step auth process:
+ * 1. POST to /api/tokens/authenticate with API token
+ * 2. Use returned Bearer token for subsequent requests
  */
-export function getContentType(endpoint: string): string {
-  // Default content types for different endpoint patterns
-  if (endpoint.includes('/projects') && !endpoint.includes('/versions')) {
-    return 'application/vnd.blackducksoftware.project-detail-5+json';
+export async function authenticateAndGetBearerToken(
+  baseURL: string,
+  apiToken: string,
+  timeout: number = 30000,
+): Promise<string> {
+  validateApiToken(apiToken);
+
+  // Return cached token if still valid (with 5 minute buffer)
+  if (cachedBearerToken && Date.now() < tokenExpiry - 5 * 60 * 1000) {
+    return cachedBearerToken;
   }
 
-  if (endpoint.includes('/versions')) {
-    return 'application/vnd.blackducksoftware.project-detail-5+json';
-  }
+  try {
+    const response = await axios.post(
+      `${baseURL}/api/tokens/authenticate`,
+      {},
+      {
+        headers: {
+          Authorization: `token ${apiToken}`,
+          Accept: "application/vnd.blackducksoftware.user-4+json",
+        },
+        timeout,
+      },
+    );
 
-  if (endpoint.includes('/vulnerable-bom-components')) {
-    return 'application/vnd.blackducksoftware.bill-of-materials-6+json';
-  }
+    const bearerToken = response.data.bearerToken;
+    if (!bearerToken) {
+      throw new ValidationError(
+        "No bearer token returned from authentication endpoint",
+      );
+    }
 
-  if (endpoint.includes('/vulnerabilities')) {
-    return 'application/vnd.blackducksoftware.vulnerability-4+json';
-  }
+    // Cache the token (Black Duck tokens typically expire after 2 hours)
+    cachedBearerToken = bearerToken;
+    tokenExpiry = Date.now() + 2 * 60 * 60 * 1000; // 2 hours
 
-  if (endpoint.includes('/components')) {
-    return 'application/vnd.blackducksoftware.bill-of-materials-6+json';
-  }
+    return bearerToken;
+  } catch (error: any) {
+    // Clear cached token on auth failure
+    cachedBearerToken = null;
+    tokenExpiry = 0;
 
-  // Default JSON content type
-  return 'application/json';
+    if (error.response?.status === 401) {
+      throw new ValidationError(
+        "Invalid API token. Please check your BLACK_DUCK_API_TOKEN in .env file. " +
+          "Generate a new token from: Black Duck > User Profile > My Access Tokens",
+      );
+    }
+
+    throw error;
+  }
 }

@@ -10,7 +10,7 @@ export class BlackDuckError extends Error {
   }
 }
 
-export class AuthenticationError extends BlackDuckError {
+class AuthenticationError extends BlackDuckError {
   constructor(message: string = 'Authentication failed. Please check your API token.') {
     super(message, 401, 'AUTHENTICATION_ERROR');
     this.name = 'AuthenticationError';
@@ -18,7 +18,7 @@ export class AuthenticationError extends BlackDuckError {
   }
 }
 
-export class NotFoundError extends BlackDuckError {
+class NotFoundError extends BlackDuckError {
   constructor(resource: string, id?: string) {
     const message = id
       ? `${resource} with ID '${id}' not found`
@@ -37,7 +37,7 @@ export class ValidationError extends BlackDuckError {
   }
 }
 
-export class RateLimitError extends BlackDuckError {
+class RateLimitError extends BlackDuckError {
   constructor(message: string = 'Rate limit exceeded. Please try again later.') {
     super(message, 429, 'RATE_LIMIT_ERROR');
     this.name = 'RateLimitError';
@@ -45,7 +45,7 @@ export class RateLimitError extends BlackDuckError {
   }
 }
 
-export class ServerError extends BlackDuckError {
+class ServerError extends BlackDuckError {
   constructor(message: string = 'Black Duck server error occurred.') {
     super(message, 500, 'SERVER_ERROR');
     this.name = 'ServerError';

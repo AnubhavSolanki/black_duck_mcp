@@ -21,7 +21,7 @@ import type {
   UpgradeGuidanceResponse,
 } from './types.js';
 
-export class BlackDuckClient {
+class BlackDuckClient {
   private client: AxiosInstance;
   private baseURL: string;
   private bearerToken: string | null = null;

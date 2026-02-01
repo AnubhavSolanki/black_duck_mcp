@@ -9,7 +9,7 @@ export interface Meta {
   links?: Link[];
 }
 
-export interface Link {
+interface Link {
   rel: string;
   href: string;
 }
@@ -63,74 +63,6 @@ export interface ProjectVersion {
   _meta: Meta;
 }
 
-// Component types
-export interface Component {
-  componentName: string;
-  componentVersionName: string;
-  componentVersion?: string;
-  licenseDisplay?: string;
-  licenses?: License[];
-  securityRiskProfile?: RiskProfile;
-  policyStatus?: string;
-  activityData?: ActivityData;
-  origins?: Origin[];
-  matchTypes?: string[];
-  usages?: string[];
-  ignored?: boolean;
-  reviewStatus?: string;
-  _meta: Meta;
-}
-
-export interface License {
-  license: string;
-  licenseDisplay: string;
-  licenses?: LicenseDefinition[];
-}
-
-export interface LicenseDefinition {
-  license: string;
-  licenseDisplay: string;
-  name: string;
-  ownership: string;
-  codeSharing: string;
-  licenseType?: string;
-  _meta: Meta;
-}
-
-export interface RiskProfile {
-  categories: {
-    ACTIVITY?: RiskCount;
-    LICENSE?: RiskCount;
-    OPERATIONAL?: RiskCount;
-    VERSION?: RiskCount;
-    VULNERABILITY?: RiskCount;
-  };
-}
-
-export interface RiskCount {
-  CRITICAL?: number;
-  HIGH?: number;
-  MEDIUM?: number;
-  LOW?: number;
-  OK?: number;
-  UNKNOWN?: number;
-}
-
-export interface ActivityData {
-  newerReleases?: number;
-  lastCommitDate?: string;
-  commitCount12Month?: number;
-  contributorCount12Month?: number;
-}
-
-export interface Origin {
-  externalNamespace?: string;
-  externalId?: string;
-  originName?: string;
-  originId?: string;
-  _meta: Meta;
-}
-
 // Vulnerability types
 export interface VulnerableComponent {
   componentName: string;
@@ -164,7 +96,13 @@ export interface VulnerabilityWithRemediation {
   _meta: Meta;
 }
 
-export type VulnerabilitySeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO' | 'UNSPECIFIED';
+export type VulnerabilitySeverity =
+  | "CRITICAL"
+  | "HIGH"
+  | "MEDIUM"
+  | "LOW"
+  | "INFO"
+  | "UNSPECIFIED";
 
 export interface CvssScore {
   baseScore?: number;
@@ -185,7 +123,7 @@ export interface CvssScore {
   vector?: string;
 }
 
-export interface TemporalMetrics {
+interface TemporalMetrics {
   exploitCodeMaturity?: string;
   remediationLevel?: string;
   reportConfidence?: string;
@@ -205,22 +143,15 @@ export interface BdsaVulnerability {
 
 // Remediation types
 export type RemediationStatus =
-  | 'NEW'
-  | 'REMEDIATION_REQUIRED'
-  | 'REMEDIATION_COMPLETE'
-  | 'DUPLICATE'
-  | 'IGNORED'
-  | 'MITIGATED'
-  | 'NEEDS_REVIEW'
-  | 'NOT_VULNERABLE'
-  | 'PATCHED';
-
-export type RemediationJustification =
-  | 'NO_CODE'
-  | 'PROTECTED_BY_MITIGATING_CONTROL'
-  | 'PROTECTED_BY_COMPILER'
-  | 'DYNAMICALLY_PROTECTED'
-  | 'STATICALLY_PROTECTED';
+  | "NEW"
+  | "REMEDIATION_REQUIRED"
+  | "REMEDIATION_COMPLETE"
+  | "DUPLICATE"
+  | "IGNORED"
+  | "MITIGATED"
+  | "NEEDS_REVIEW"
+  | "NOT_VULNERABLE"
+  | "PATCHED";
 
 export interface RemediationUpdate {
   remediationStatus: RemediationStatus;
@@ -261,11 +192,11 @@ export interface DependencyPathsResponse {
 
 export interface DependencyPathItem {
   count: number;
-  type: 'DIRECT' | 'TRANSITIVE';
+  type: "DIRECT" | "TRANSITIVE";
   path: DependencyPathNode[];
 }
 
-export interface DependencyPathNode {
+interface DependencyPathNode {
   name: string;
   version: string;
   originId: string;

@@ -9,7 +9,7 @@ import { ValidationError } from "./errors.js";
  * Validate API token format
  * Black Duck API tokens are typically long alphanumeric strings
  */
-export function validateApiToken(token: string): void {
+function validateApiToken(token: string): void {
   if (!token || token.trim().length === 0) {
     throw new ValidationError("API token cannot be empty");
   }

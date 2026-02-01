@@ -5,15 +5,15 @@
  * Model Context Protocol server for Black Duck vulnerability management
  */
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   McpError,
   ErrorCode,
-} from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
+} from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
 
 // Import tool functions
 import {
@@ -21,84 +21,125 @@ import {
   findProjectByName,
   getProjectDetails,
   listProjectVersions,
-} from './tools/projects.js';
+} from "./tools/projects.js";
 import {
   getProjectVulnerabilities,
   getVulnerabilityDetails,
-} from './tools/vulnerabilities.js';
-import {
-  updateVulnerabilityRemediation,
-} from './tools/remediation.js';
-import {
-  getVulnerabilityFixGuidance,
-} from './tools/fix-guidance.js';
+} from "./tools/vulnerabilities.js";
+import { updateVulnerabilityRemediation } from "./tools/remediation.js";
+import { getVulnerabilityFixGuidance } from "./tools/fix-guidance.js";
 
 // Tool parameter schemas
 const ListProjectsSchema = z.object({
-  limit: z.number().optional().default(100).describe('Maximum number of results to return'),
-  offset: z.number().optional().default(0).describe('Number of results to skip for pagination'),
-  searchTerm: z.string().optional().describe('Filter projects by name (partial match)'),
+  limit: z
+    .number()
+    .optional()
+    .default(100)
+    .describe("Maximum number of results to return"),
+  offset: z
+    .number()
+    .optional()
+    .default(0)
+    .describe("Number of results to skip for pagination"),
+  searchTerm: z
+    .string()
+    .optional()
+    .describe("Filter projects by name (partial match)"),
 });
 
 const FindProjectByNameSchema = z.object({
-  projectName: z.string().describe('Project name to search for (partial match supported)'),
+  projectName: z
+    .string()
+    .describe("Project name to search for (partial match supported)"),
 });
 
 const GetProjectDetailsSchema = z.object({
-  projectId: z.string().describe('UUID of the project'),
+  projectId: z.string().describe("UUID of the project"),
 });
 
 const ListProjectVersionsSchema = z.object({
-  projectId: z.string().describe('UUID of the project'),
-  limit: z.number().optional().default(100).describe('Maximum number of results to return'),
-  offset: z.number().optional().default(0).describe('Number of results to skip for pagination'),
+  projectId: z.string().describe("UUID of the project"),
+  limit: z
+    .number()
+    .optional()
+    .default(100)
+    .describe("Maximum number of results to return"),
+  offset: z
+    .number()
+    .optional()
+    .default(0)
+    .describe("Number of results to skip for pagination"),
 });
 
 const GetProjectVulnerabilitiesSchema = z.object({
-  projectId: z.string().describe('UUID of the project'),
-  projectVersionId: z.string().describe('UUID of the project version'),
-  limit: z.number().optional().default(100).describe('Maximum number of results to return'),
-  offset: z.number().optional().default(0).describe('Number of results to skip for pagination'),
-  severity: z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO', 'UNSPECIFIED']).optional()
-    .describe('Filter by vulnerability severity'),
-  searchTerm: z.string().optional().describe('Search by component or vulnerability name'),
+  projectId: z.string().describe("UUID of the project"),
+  projectVersionId: z.string().describe("UUID of the project version"),
+  limit: z
+    .number()
+    .optional()
+    .default(100)
+    .describe("Maximum number of results to return"),
+  offset: z
+    .number()
+    .optional()
+    .default(0)
+    .describe("Number of results to skip for pagination"),
+  severity: z
+    .enum(["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO", "UNSPECIFIED"])
+    .optional()
+    .describe("Filter by vulnerability severity"),
+  searchTerm: z
+    .string()
+    .optional()
+    .describe("Search by component or vulnerability name"),
 });
 
 const GetVulnerabilityDetailsSchema = z.object({
-  projectId: z.string().describe('UUID of the project'),
-  projectVersionId: z.string().describe('UUID of the project version'),
-  componentId: z.string().describe('UUID of the component'),
-  componentVersionId: z.string().describe('UUID of the component version'),
-  vulnerabilityId: z.string().describe('Vulnerability identifier (e.g., CVE-2023-1234)'),
+  projectId: z.string().describe("UUID of the project"),
+  projectVersionId: z.string().describe("UUID of the project version"),
+  componentId: z.string().describe("UUID of the component"),
+  componentVersionId: z.string().describe("UUID of the component version"),
+  vulnerabilityId: z
+    .string()
+    .describe("Vulnerability identifier (e.g., CVE-2023-1234)"),
 });
 
 const UpdateVulnerabilityRemediationSchema = z.object({
-  projectId: z.string().describe('UUID of the project'),
-  projectVersionId: z.string().describe('UUID of the project version'),
-  componentId: z.string().describe('UUID of the component'),
-  componentVersionId: z.string().describe('UUID of the component version'),
-  vulnerabilityId: z.string().describe('Vulnerability identifier (e.g., CVE-2023-1234)'),
-  remediationStatus: z.enum([
-    'NEW',
-    'REMEDIATION_REQUIRED',
-    'REMEDIATION_COMPLETE',
-    'DUPLICATE',
-    'IGNORED',
-    'MITIGATED',
-    'NEEDS_REVIEW',
-    'NOT_VULNERABLE',
-    'PATCHED',
-  ]).describe('New remediation status for the vulnerability'),
-  comment: z.string().optional().describe('Optional comment explaining the remediation decision'),
+  projectId: z.string().describe("UUID of the project"),
+  projectVersionId: z.string().describe("UUID of the project version"),
+  componentId: z.string().describe("UUID of the component"),
+  componentVersionId: z.string().describe("UUID of the component version"),
+  vulnerabilityId: z
+    .string()
+    .describe("Vulnerability identifier (e.g., CVE-2023-1234)"),
+  remediationStatus: z
+    .enum([
+      "NEW",
+      "REMEDIATION_REQUIRED",
+      "REMEDIATION_COMPLETE",
+      "DUPLICATE",
+      "IGNORED",
+      "MITIGATED",
+      "NEEDS_REVIEW",
+      "NOT_VULNERABLE",
+      "PATCHED",
+    ])
+    .describe("New remediation status for the vulnerability"),
+  comment: z
+    .string()
+    .optional()
+    .describe("Optional comment explaining the remediation decision"),
 });
 
 const GetVulnerabilityFixGuidanceSchema = z.object({
-  projectId: z.string().describe('UUID of the project'),
-  projectVersionId: z.string().describe('UUID of the project version'),
-  componentId: z.string().describe('UUID of the component'),
-  componentVersionId: z.string().describe('UUID of the component version'),
-  vulnerabilityId: z.string().describe('Vulnerability identifier (e.g., CVE-2023-1234)'),
-  originId: z.string().describe('UUID of the origin'),
+  projectId: z.string().describe("UUID of the project"),
+  projectVersionId: z.string().describe("UUID of the project version"),
+  componentId: z.string().describe("UUID of the component"),
+  componentVersionId: z.string().describe("UUID of the component version"),
+  vulnerabilityId: z
+    .string()
+    .describe("Vulnerability identifier (e.g., CVE-2023-1234)"),
+  originId: z.string().describe("UUID of the origin"),
 });
 
 /**
@@ -107,14 +148,14 @@ const GetVulnerabilityFixGuidanceSchema = z.object({
 async function main() {
   const server = new Server(
     {
-      name: 'blackduck-mcp-server',
-      version: '1.0.0',
+      name: "blackduck-mcp-server",
+      version: "1.0.0",
     },
     {
       capabilities: {
         tools: {},
       },
-    }
+    },
   );
 
   /**
@@ -124,249 +165,264 @@ async function main() {
     return {
       tools: [
         {
-          name: 'list_projects',
+          name: "list_projects",
           description:
-            'List all Black Duck projects. Supports pagination and filtering by project name. Returns project IDs, names, descriptions, and metadata.',
+            "List all Black Duck projects. Supports pagination and filtering by project name. Returns project IDs, names, descriptions, and metadata.",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               limit: {
-                type: 'number',
-                description: 'Maximum number of results to return (default: 100)',
+                type: "number",
+                description:
+                  "Maximum number of results to return (default: 100)",
               },
               offset: {
-                type: 'number',
-                description: 'Number of results to skip for pagination (default: 0)',
+                type: "number",
+                description:
+                  "Number of results to skip for pagination (default: 0)",
               },
               searchTerm: {
-                type: 'string',
-                description: 'Filter projects by name (partial match)',
+                type: "string",
+                description: "Filter projects by name (partial match)",
               },
             },
           },
         },
         {
-          name: 'find_project_by_name',
+          name: "find_project_by_name",
           description:
-            'Find Black Duck projects by name. Supports partial matching. Returns matching projects with their IDs and details. Useful when you know the project name but need the project ID.',
+            "Find Black Duck projects by name. Supports partial matching. Returns matching projects with their IDs and details. Useful when you know the project name but need the project ID.",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               projectName: {
-                type: 'string',
-                description: 'Project name to search for (partial match supported)',
+                type: "string",
+                description:
+                  "Project name to search for (partial match supported)",
               },
             },
-            required: ['projectName'],
+            required: ["projectName"],
           },
         },
         {
-          name: 'get_project_details',
+          name: "get_project_details",
           description:
-            'Get detailed information about a specific Black Duck project, including all its versions. Requires the project ID (use find_project_by_name first if you only know the name).',
+            "Get detailed information about a specific Black Duck project, including all its versions. Requires the project ID (use find_project_by_name first if you only know the name).",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               projectId: {
-                type: 'string',
-                description: 'UUID of the project',
+                type: "string",
+                description: "UUID of the project",
               },
             },
-            required: ['projectId'],
+            required: ["projectId"],
           },
         },
         {
-          name: 'list_project_versions',
+          name: "list_project_versions",
           description:
-            'List all versions of a specific Black Duck project. Returns version IDs, names, phases, and distribution information.',
+            "List all versions of a specific Black Duck project. Returns version IDs, names, phases, and distribution information.",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               projectId: {
-                type: 'string',
-                description: 'UUID of the project',
+                type: "string",
+                description: "UUID of the project",
               },
               limit: {
-                type: 'number',
-                description: 'Maximum number of results to return (default: 100)',
+                type: "number",
+                description:
+                  "Maximum number of results to return (default: 100)",
               },
               offset: {
-                type: 'number',
-                description: 'Number of results to skip for pagination (default: 0)',
+                type: "number",
+                description:
+                  "Number of results to skip for pagination (default: 0)",
               },
             },
-            required: ['projectId'],
+            required: ["projectId"],
           },
         },
         {
-          name: 'get_project_vulnerabilities',
+          name: "get_project_vulnerabilities",
           description:
-            'Get all vulnerable components and their vulnerabilities for a specific project version. Returns vulnerability details including severity, CVSS scores, remediation status, and component information. Supports filtering by severity and searching by name.',
+            "Get all vulnerable components and their vulnerabilities for a specific project version. Returns vulnerability details including severity, CVSS scores, remediation status, and component information. Supports filtering by severity and searching by name.",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               projectId: {
-                type: 'string',
-                description: 'UUID of the project',
+                type: "string",
+                description: "UUID of the project",
               },
               projectVersionId: {
-                type: 'string',
-                description: 'UUID of the project version',
+                type: "string",
+                description: "UUID of the project version",
               },
               limit: {
-                type: 'number',
-                description: 'Maximum number of results to return (default: 100)',
+                type: "number",
+                description:
+                  "Maximum number of results to return (default: 100)",
               },
               offset: {
-                type: 'number',
-                description: 'Number of results to skip for pagination (default: 0)',
+                type: "number",
+                description:
+                  "Number of results to skip for pagination (default: 0)",
               },
               severity: {
-                type: 'string',
-                enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO', 'UNSPECIFIED'],
-                description: 'Filter by vulnerability severity',
+                type: "string",
+                enum: [
+                  "CRITICAL",
+                  "HIGH",
+                  "MEDIUM",
+                  "LOW",
+                  "INFO",
+                  "UNSPECIFIED",
+                ],
+                description: "Filter by vulnerability severity",
               },
               searchTerm: {
-                type: 'string',
-                description: 'Search by component or vulnerability name',
+                type: "string",
+                description: "Search by component or vulnerability name",
               },
             },
-            required: ['projectId', 'projectVersionId'],
+            required: ["projectId", "projectVersionId"],
           },
         },
         {
-          name: 'get_vulnerability_details',
+          name: "get_vulnerability_details",
           description:
-            'Get detailed information about a specific vulnerability in a component. Returns full CVSS scores (v2/v3), remediation information, technical description, and solution details.',
+            "Get detailed information about a specific vulnerability in a component. Returns full CVSS scores (v2/v3), remediation information, technical description, and solution details.",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               projectId: {
-                type: 'string',
-                description: 'UUID of the project',
+                type: "string",
+                description: "UUID of the project",
               },
               projectVersionId: {
-                type: 'string',
-                description: 'UUID of the project version',
+                type: "string",
+                description: "UUID of the project version",
               },
               componentId: {
-                type: 'string',
-                description: 'UUID of the component',
+                type: "string",
+                description: "UUID of the component",
               },
               componentVersionId: {
-                type: 'string',
-                description: 'UUID of the component version',
+                type: "string",
+                description: "UUID of the component version",
               },
               vulnerabilityId: {
-                type: 'string',
-                description: 'Vulnerability identifier (e.g., CVE-2023-1234)',
+                type: "string",
+                description: "Vulnerability identifier (e.g., CVE-2023-1234)",
               },
             },
             required: [
-              'projectId',
-              'projectVersionId',
-              'componentId',
-              'componentVersionId',
-              'vulnerabilityId',
+              "projectId",
+              "projectVersionId",
+              "componentId",
+              "componentVersionId",
+              "vulnerabilityId",
             ],
           },
         },
         {
-          name: 'update_vulnerability_remediation',
+          name: "update_vulnerability_remediation",
           description:
-            'Update the remediation status and add comments for a specific vulnerability. Valid statuses: NEW, REMEDIATION_REQUIRED, REMEDIATION_COMPLETE, DUPLICATE, IGNORED, MITIGATED, NEEDS_REVIEW, NOT_VULNERABLE, PATCHED.',
+            "Update the remediation status and add comments for a specific vulnerability. Valid statuses: NEW, REMEDIATION_REQUIRED, REMEDIATION_COMPLETE, DUPLICATE, IGNORED, MITIGATED, NEEDS_REVIEW, NOT_VULNERABLE, PATCHED.",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               projectId: {
-                type: 'string',
-                description: 'UUID of the project',
+                type: "string",
+                description: "UUID of the project",
               },
               projectVersionId: {
-                type: 'string',
-                description: 'UUID of the project version',
+                type: "string",
+                description: "UUID of the project version",
               },
               componentId: {
-                type: 'string',
-                description: 'UUID of the component',
+                type: "string",
+                description: "UUID of the component",
               },
               componentVersionId: {
-                type: 'string',
-                description: 'UUID of the component version',
+                type: "string",
+                description: "UUID of the component version",
               },
               vulnerabilityId: {
-                type: 'string',
-                description: 'Vulnerability identifier (e.g., CVE-2023-1234)',
+                type: "string",
+                description: "Vulnerability identifier (e.g., CVE-2023-1234)",
               },
               remediationStatus: {
-                type: 'string',
+                type: "string",
                 enum: [
-                  'NEW',
-                  'REMEDIATION_REQUIRED',
-                  'REMEDIATION_COMPLETE',
-                  'DUPLICATE',
-                  'IGNORED',
-                  'MITIGATED',
-                  'NEEDS_REVIEW',
-                  'NOT_VULNERABLE',
-                  'PATCHED',
+                  "NEW",
+                  "REMEDIATION_REQUIRED",
+                  "REMEDIATION_COMPLETE",
+                  "DUPLICATE",
+                  "IGNORED",
+                  "MITIGATED",
+                  "NEEDS_REVIEW",
+                  "NOT_VULNERABLE",
+                  "PATCHED",
                 ],
-                description: 'New remediation status for the vulnerability',
+                description: "New remediation status for the vulnerability",
               },
               comment: {
-                type: 'string',
-                description: 'Optional comment explaining the remediation decision',
+                type: "string",
+                description:
+                  "Optional comment explaining the remediation decision",
               },
             },
             required: [
-              'projectId',
-              'projectVersionId',
-              'componentId',
-              'componentVersionId',
-              'vulnerabilityId',
-              'remediationStatus',
+              "projectId",
+              "projectVersionId",
+              "componentId",
+              "componentVersionId",
+              "vulnerabilityId",
+              "remediationStatus",
             ],
           },
         },
         {
-          name: 'get_vulnerability_fix_guidance',
+          name: "get_vulnerability_fix_guidance",
           description:
-            'Get comprehensive fix guidance for a vulnerability including short-term and long-term upgrade recommendations. Automatically detects if the dependency is direct or transitive and provides appropriate remediation steps with risk analysis.',
+            "Determine if a vulnerability is fixable and get specific upgrade paths. Returns available upgrade recommendations (short-term and long-term), detects if the dependency is direct or transitive, and provides remediation steps with risk analysis. This tool must be called for each vulnerability to check if fixes are available and identify fixable findings.",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               projectId: {
-                type: 'string',
-                description: 'UUID of the project',
+                type: "string",
+                description: "UUID of the project",
               },
               projectVersionId: {
-                type: 'string',
-                description: 'UUID of the project version',
+                type: "string",
+                description: "UUID of the project version",
               },
               componentId: {
-                type: 'string',
-                description: 'UUID of the component',
+                type: "string",
+                description: "UUID of the component",
               },
               componentVersionId: {
-                type: 'string',
-                description: 'UUID of the component version',
+                type: "string",
+                description: "UUID of the component version",
               },
               vulnerabilityId: {
-                type: 'string',
-                description: 'Vulnerability identifier (e.g., CVE-2023-1234)',
+                type: "string",
+                description: "Vulnerability identifier (e.g., CVE-2023-1234)",
               },
               originId: {
-                type: 'string',
-                description: 'UUID of the origin',
+                type: "string",
+                description: "UUID of the origin",
               },
             },
             required: [
-              'projectId',
-              'projectVersionId',
-              'componentId',
-              'componentVersionId',
-              'vulnerabilityId',
-              'originId',
+              "projectId",
+              "projectVersionId",
+              "componentId",
+              "componentVersionId",
+              "vulnerabilityId",
+              "originId",
             ],
           },
         },
@@ -382,81 +438,78 @@ async function main() {
       const { name, arguments: args } = request.params;
 
       switch (name) {
-        case 'list_projects': {
+        case "list_projects": {
           const params = ListProjectsSchema.parse(args);
           const result = await listProjects(params);
           return {
-            content: [{ type: 'text', text: result }],
+            content: [{ type: "text", text: result }],
           };
         }
 
-        case 'find_project_by_name': {
+        case "find_project_by_name": {
           const params = FindProjectByNameSchema.parse(args);
           const result = await findProjectByName(params);
           return {
-            content: [{ type: 'text', text: result }],
+            content: [{ type: "text", text: result }],
           };
         }
 
-        case 'get_project_details': {
+        case "get_project_details": {
           const params = GetProjectDetailsSchema.parse(args);
           const result = await getProjectDetails(params);
           return {
-            content: [{ type: 'text', text: result }],
+            content: [{ type: "text", text: result }],
           };
         }
 
-        case 'list_project_versions': {
+        case "list_project_versions": {
           const params = ListProjectVersionsSchema.parse(args);
           const result = await listProjectVersions(params);
           return {
-            content: [{ type: 'text', text: result }],
+            content: [{ type: "text", text: result }],
           };
         }
 
-        case 'get_project_vulnerabilities': {
+        case "get_project_vulnerabilities": {
           const params = GetProjectVulnerabilitiesSchema.parse(args);
           const result = await getProjectVulnerabilities(params);
           return {
-            content: [{ type: 'text', text: result }],
+            content: [{ type: "text", text: result }],
           };
         }
 
-        case 'get_vulnerability_details': {
+        case "get_vulnerability_details": {
           const params = GetVulnerabilityDetailsSchema.parse(args);
           const result = await getVulnerabilityDetails(params);
           return {
-            content: [{ type: 'text', text: result }],
+            content: [{ type: "text", text: result }],
           };
         }
 
-        case 'update_vulnerability_remediation': {
+        case "update_vulnerability_remediation": {
           const params = UpdateVulnerabilityRemediationSchema.parse(args);
           const result = await updateVulnerabilityRemediation(params);
           return {
-            content: [{ type: 'text', text: result }],
+            content: [{ type: "text", text: result }],
           };
         }
 
-        case 'get_vulnerability_fix_guidance': {
+        case "get_vulnerability_fix_guidance": {
           const params = GetVulnerabilityFixGuidanceSchema.parse(args);
           const result = await getVulnerabilityFixGuidance(params);
           return {
-            content: [{ type: 'text', text: result }],
+            content: [{ type: "text", text: result }],
           };
         }
 
         default:
-          throw new McpError(
-            ErrorCode.MethodNotFound,
-            `Unknown tool: ${name}`
-          );
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new McpError(
           ErrorCode.InvalidParams,
-          `Invalid parameters: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`
+          `Invalid parameters: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
         );
       }
       throw error;
@@ -467,11 +520,11 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  console.error('Black Duck MCP Server running on stdio');
+  console.error("Black Duck MCP Server running on stdio");
 }
 
 // Run the server
 main().catch((error) => {
-  console.error('Fatal error in main():', error);
+  console.error("Fatal error in main():", error);
   process.exit(1);
 });

@@ -6,7 +6,10 @@ A Model Context Protocol (MCP) server that integrates with Black Duck to provide
 
 - **Project Management**: List, search, and retrieve details about Black Duck projects
 - **Vulnerability Tracking**: Query vulnerabilities across project versions with filtering by severity
+- **Fix Guidance & Upgrade Paths**: Determine if vulnerabilities are fixable and get specific upgrade recommendations for both direct and transitive dependencies
 - **Remediation Management**: Update vulnerability remediation status and add justification comments
+- **Dependency Analysis**: Identify whether vulnerable components are direct or transitive dependencies
+- **Risk Assessment**: View vulnerability risk reduction metrics for different upgrade paths
 - **API Token Authentication**: Secure authentication using Black Duck API tokens
 - **Comprehensive Error Handling**: Clear error messages for troubleshooting
 
@@ -109,6 +112,31 @@ Update the remediation status and add comments for a vulnerability.
 Mark CVE-2023-1234 as NOT_VULNERABLE with comment "This code path is never executed"
 ```
 
+### 8. `get_vulnerability_fix_guidance`
+Determine if a vulnerability is fixable and get specific upgrade paths. This tool identifies whether a vulnerability can be fixed by upgrading the component and provides detailed recommendations.
+
+**Parameters:**
+- `projectId` (required): UUID of the project
+- `projectVersionId` (required): UUID of the project version
+- `componentId` (required): UUID of the component
+- `componentVersionId` (required): UUID of the component version
+- `vulnerabilityId` (required): Vulnerability ID (e.g., CVE-2023-1234)
+- `originId` (required): UUID of the origin
+
+**Returns:**
+- Vulnerability details including severity and CVSS scores
+- Component information and dependency type (DIRECT or TRANSITIVE)
+- Short-term upgrade recommendations with risk analysis
+- Long-term upgrade recommendations with risk analysis
+- Step-by-step remediation guidance
+- Risk reduction metrics for each upgrade path
+
+**Example:**
+```
+Get fix guidance for CVE-2023-1234 in the specified component
+Check if upgrading can fix the log4j vulnerability
+```
+
 ## Installation
 
 ### Prerequisites
@@ -204,6 +232,8 @@ You: Show me all CRITICAL vulnerabilities in that project
 
 You: What are the details of CVE-2023-12345?
 
+You: Can I fix CVE-2023-12345 by upgrading the component?
+
 You: Mark CVE-2023-12345 as NOT_VULNERABLE because we don't use that code path
 ```
 
@@ -222,7 +252,8 @@ black_duck_mcp/
 │   ├── tools/
 │   │   ├── projects.ts            # Project-related tools
 │   │   ├── vulnerabilities.ts     # Vulnerability tools
-│   │   └── remediation.ts         # Remediation status tools
+│   │   ├── remediation.ts         # Remediation status tools
+│   │   └── fix-guidance.ts        # Vulnerability fix guidance and upgrade paths
 │   └── utils/
 │       ├── auth.ts                # Authentication helpers
 │       └── errors.ts              # Error handling utilities
@@ -316,6 +347,9 @@ This MCP server integrates with Black Duck REST API v2024.x. Key endpoints used:
 - `GET /api/projects/{projectId}/versions/{versionId}/vulnerable-bom-components` - Get vulnerabilities
 - `GET /api/projects/{projectId}/versions/{versionId}/components/{componentId}/versions/{componentVersionId}/vulnerabilities/{vulnId}/remediation` - Get vulnerability details
 - `PUT /api/projects/{projectId}/versions/{versionId}/components/{componentId}/versions/{componentVersionId}/vulnerabilities/{vulnId}/remediation` - Update remediation status
+- `GET /api/projects/{projectId}/versions/{versionId}/components/{componentId}/versions/{componentVersionId}/origins/{originId}/dependency-paths` - Get dependency paths (direct vs transitive)
+- `GET /api/components/{componentId}/versions/{componentVersionId}/upgrade-guidance` - Get upgrade guidance for direct dependencies
+- `GET /api/components/{componentId}/versions/{componentVersionId}/origins/{originId}/transitive-upgrade-guidance` - Get upgrade guidance for transitive dependencies
 
 For complete API documentation, refer to your Black Duck server's API documentation at `https://your-server.com/api/doc/public`.
 

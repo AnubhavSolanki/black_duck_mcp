@@ -85,6 +85,7 @@ export interface VulnerabilityWithRemediation {
   cvss3?: CvssScore;
   relatedVulnerability?: string;
   remediationStatus?: RemediationStatus;
+  remediationComment?: string;
   remediationTargetAt?: string;
   remediationActualAt?: string;
   remediationCreatedAt?: string;
@@ -96,13 +97,7 @@ export interface VulnerabilityWithRemediation {
   _meta: Meta;
 }
 
-export type VulnerabilitySeverity =
-  | "CRITICAL"
-  | "HIGH"
-  | "MEDIUM"
-  | "LOW"
-  | "INFO"
-  | "UNSPECIFIED";
+export type VulnerabilitySeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 
 export interface CvssScore {
   baseScore?: number;
@@ -145,13 +140,8 @@ export interface BdsaVulnerability {
 export type RemediationStatus =
   | "NEW"
   | "REMEDIATION_REQUIRED"
-  | "REMEDIATION_COMPLETE"
-  | "DUPLICATE"
   | "IGNORED"
-  | "MITIGATED"
-  | "NEEDS_REVIEW"
-  | "NOT_VULNERABLE"
-  | "PATCHED";
+  | "DUPLICATE";
 
 export interface RemediationUpdate {
   remediationStatus: RemediationStatus;

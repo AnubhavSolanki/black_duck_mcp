@@ -3,17 +3,23 @@
  */
 
 export class BlackDuckError extends Error {
-  constructor(message: string, public statusCode?: number, public errorCode?: string) {
+  constructor(
+    message: string,
+    public statusCode?: number,
+    public errorCode?: string,
+  ) {
     super(message);
-    this.name = 'BlackDuckError';
+    this.name = "BlackDuckError";
     Object.setPrototypeOf(this, BlackDuckError.prototype);
   }
 }
 
 class AuthenticationError extends BlackDuckError {
-  constructor(message: string = 'Authentication failed. Please check your API token.') {
-    super(message, 401, 'AUTHENTICATION_ERROR');
-    this.name = 'AuthenticationError';
+  constructor(
+    message: string = "Authentication failed. Please check your API token.",
+  ) {
+    super(message, 401, "AUTHENTICATION_ERROR");
+    this.name = "AuthenticationError";
     Object.setPrototypeOf(this, AuthenticationError.prototype);
   }
 }
@@ -23,65 +29,89 @@ class NotFoundError extends BlackDuckError {
     const message = id
       ? `${resource} with ID '${id}' not found`
       : `${resource} not found`;
-    super(message, 404, 'NOT_FOUND');
-    this.name = 'NotFoundError';
+    super(message, 404, "NOT_FOUND");
+    this.name = "NotFoundError";
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
 
 export class ValidationError extends BlackDuckError {
   constructor(message: string) {
-    super(message, 400, 'VALIDATION_ERROR');
-    this.name = 'ValidationError';
+    super(message, 400, "VALIDATION_ERROR");
+    this.name = "ValidationError";
     Object.setPrototypeOf(this, ValidationError.prototype);
   }
 }
 
 class RateLimitError extends BlackDuckError {
-  constructor(message: string = 'Rate limit exceeded. Please try again later.') {
-    super(message, 429, 'RATE_LIMIT_ERROR');
-    this.name = 'RateLimitError';
+  constructor(
+    message: string = "Rate limit exceeded. Please try again later.",
+  ) {
+    super(message, 429, "RATE_LIMIT_ERROR");
+    this.name = "RateLimitError";
     Object.setPrototypeOf(this, RateLimitError.prototype);
   }
 }
 
 class ServerError extends BlackDuckError {
-  constructor(message: string = 'Black Duck server error occurred.') {
-    super(message, 500, 'SERVER_ERROR');
-    this.name = 'ServerError';
+  constructor(message: string = "Black Duck server error occurred.") {
+    super(message, 500, "SERVER_ERROR");
+    this.name = "ServerError";
     Object.setPrototypeOf(this, ServerError.prototype);
   }
 }
 
 export class NetworkError extends BlackDuckError {
-  constructor(message: string = 'Network error occurred while connecting to Black Duck.') {
-    super(message, undefined, 'NETWORK_ERROR');
-    this.name = 'NetworkError';
+  constructor(
+    message: string = "Network error occurred while connecting to Black Duck.",
+  ) {
+    super(message, undefined, "NETWORK_ERROR");
+    this.name = "NetworkError";
     Object.setPrototypeOf(this, NetworkError.prototype);
+  }
+}
+
+export class UnknownOriginError extends Error {
+  vulnerabilityName: string;
+
+  constructor(vulnerabilityName: string) {
+    super("Unknown origin for vulnerability");
+    this.name = "UnknownOriginError";
+    this.message =
+      "Unable to determine origin for vulnerability, cannot retrieve upgrade guidance.";
+    this.vulnerabilityName = vulnerabilityName;
   }
 }
 
 /**
  * Convert HTTP status code to appropriate error
  */
-export function createErrorFromStatus(statusCode: number, message?: string, errorCode?: string): BlackDuckError {
+export function createErrorFromStatus(
+  statusCode: number,
+  message?: string,
+  errorCode?: string,
+): BlackDuckError {
   switch (statusCode) {
     case 401:
     case 403:
       return new AuthenticationError(message);
     case 404:
-      return new NotFoundError(message || 'Resource', undefined);
+      return new NotFoundError(message || "Resource", undefined);
     case 429:
       return new RateLimitError(message);
     case 400:
-      return new ValidationError(message || 'Invalid request');
+      return new ValidationError(message || "Invalid request");
     case 500:
     case 502:
     case 503:
     case 504:
       return new ServerError(message);
     default:
-      return new BlackDuckError(message || 'An error occurred', statusCode, errorCode);
+      return new BlackDuckError(
+        message || "An error occurred",
+        statusCode,
+        errorCode,
+      );
   }
 }
 
